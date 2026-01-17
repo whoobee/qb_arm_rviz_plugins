@@ -1,0 +1,9 @@
+<library path="qb_arm_rviz_plugins">
+  <class name="qb_arm_rviz_plugins/TriggerGemini"
+         type="qb_arm_rviz_plugins::TriggerGeminiPanel"
+         base_class_type="rviz_common::Panel">
+    <description>
+      A panel with a button to trigger the Gemini pick service.
+    </description>
+  </class>
+</library>
