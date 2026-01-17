@@ -37,6 +37,7 @@ public:
 
 protected Q_SLOTS:
   void onButtonClick();
+  void onReturnButtonClick();
   void updateTargetClass();
   void appendLog(int level, const QString & msg);
   void updateNodeList();
@@ -47,6 +48,7 @@ protected:
   void refreshLogDisplay();
 
   QPushButton* button_;
+  QPushButton* return_button_;
   QLineEdit* target_class_editor_;
   QComboBox* node_selector_;
   QCheckBox* info_cb_;
@@ -60,6 +62,7 @@ protected:
   const size_t max_logs_ = 500;
 
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr return_client_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
   rclcpp::Subscription<rcl_interfaces::msg::Log>::SharedPtr log_sub_;
   rclcpp::Node::SharedPtr node_;

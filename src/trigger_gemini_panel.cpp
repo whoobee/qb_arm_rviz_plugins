@@ -21,8 +21,12 @@ TriggerGeminiPanel::TriggerGeminiPanel(QWidget * parent)
   input_layout->addWidget(target_class_editor_);
   layout->addLayout(input_layout);
 
+  QHBoxLayout* button_layout = new QHBoxLayout;
   button_ = new QPushButton("Trigger");
-  layout->addWidget(button_);
+  return_button_ = new QPushButton("Return");
+  button_layout->addWidget(button_);
+  button_layout->addWidget(return_button_);
+  layout->addLayout(button_layout);
 
   QHBoxLayout* log_header_layout = new QHBoxLayout;
   log_header_layout->addWidget(new QLabel("Log Node:"));
@@ -54,6 +58,7 @@ TriggerGeminiPanel::TriggerGeminiPanel(QWidget * parent)
   setLayout(layout);
 
   connect(button_, SIGNAL(clicked()), this, SLOT(onButtonClick()));
+  connect(return_button_, SIGNAL(clicked()), this, SLOT(onReturnButtonClick()));
   connect(target_class_editor_, SIGNAL(editingFinished()), this, SLOT(updateTargetClass()));
   connect(node_selector_, SIGNAL(currentIndexChanged(int)), this, SLOT(onNodeSelected(int)));
   connect(node_selector_, SIGNAL(editTextChanged(const QString &)), this, SLOT(refreshLogDisplay()));
@@ -78,6 +83,7 @@ void TriggerGeminiPanel::onInitialize()
   
   // Client for trigger service (Hardcoded)
   client_ = node_->create_client<std_srvs::srv::Trigger>("/trigger_gemini_pick");
+  return_client_ = node_->create_client<std_srvs::srv::Trigger>("/trigger_return_previous");
 
   // Subscribe to /rosout
   log_sub_ = node_->create_subscription<rcl_interfaces::msg::Log>(
@@ -249,6 +255,21 @@ void TriggerGeminiPanel::onButtonClick()
   auto future = client_->async_send_request(request);
   RCLCPP_INFO(node_->get_logger(), "Sent request to /trigger_gemini_pick");
 }
+
+void TriggerGeminiPanel::onReturnButtonClick()
+{
+  if (!return_client_) return;
+
+  if (!return_client_->wait_for_service(std::chrono::seconds(1))) {
+    RCLCPP_WARN(node_->get_logger(), "Service /trigger_return_previous not available");
+    return;
+  }
+
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+  auto future = return_client_->async_send_request(request);
+  RCLCPP_INFO(node_->get_logger(), "Sent request to /trigger_return_previous");
+}
+
 
 void TriggerGeminiPanel::load(const rviz_common::Config & config)
 {
