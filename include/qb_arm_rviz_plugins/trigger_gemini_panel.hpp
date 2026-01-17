@@ -4,6 +4,7 @@
 #include <rviz_common/panel.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <QPushButton>
 #include <QLineEdit>
 #include <QLabel>
@@ -24,14 +25,15 @@ public:
 
 protected Q_SLOTS:
   void onButtonClick();
-  void updateService();
+  void updateTargetClass();
 
 protected:
   QPushButton* button_;
-  QLineEdit* service_name_editor_;
-  QString service_name_;
+  QLineEdit* target_class_editor_;
+  QString target_class_str_;
 
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr client_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
   rclcpp::Node::SharedPtr node_;
 };
 

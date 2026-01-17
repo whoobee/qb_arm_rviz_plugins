@@ -10,6 +10,7 @@ find_package(rclcpp REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
 add_library(qb_arm_rviz_plugins SHARED
@@ -31,13 +32,14 @@ ament_target_dependencies(qb_arm_rviz_plugins
   rviz_common
   rviz_rendering
   std_srvs
+  std_msgs
 )
 
 # Use moc for Qt signals/slots
 set_target_properties(qb_arm_rviz_plugins PROPERTIES AUTOMOC ON)
 
 ament_export_libraries(qb_arm_rviz_plugins)
-ament_export_dependencies(rclcpp rviz_common rviz_rendering std_srvs)
+ament_export_dependencies(rclcpp rviz_common rviz_rendering std_srvs std_msgs)
 
 pluginlib_export_plugin_description_file(rviz_common plugin_description.xml)
 

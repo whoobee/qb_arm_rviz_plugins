@@ -2,20 +2,22 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <rviz_common/display_context.hpp>
+#include <thread>
+#include <chrono>
 
 namespace qb_arm_rviz_plugins
 {
 
 TriggerGeminiPanel::TriggerGeminiPanel(QWidget * parent)
-: rviz_common::Panel(parent), service_name_("/trigger_gemini_pick")
+: rviz_common::Panel(parent), target_class_str_("scissors")
 {
   QVBoxLayout* layout = new QVBoxLayout;
   
-  QHBoxLayout* service_layout = new QHBoxLayout;
-  service_layout->addWidget(new QLabel("Service:"));
-  service_name_editor_ = new QLineEdit(service_name_);
-  service_layout->addWidget(service_name_editor_);
-  layout->addLayout(service_layout);
+  QHBoxLayout* input_layout = new QHBoxLayout;
+  input_layout->addWidget(new QLabel("Target Class:"));
+  target_class_editor_ = new QLineEdit(target_class_str_);
+  input_layout->addWidget(target_class_editor_);
+  layout->addLayout(input_layout);
 
   button_ = new QPushButton("Trigger");
   layout->addWidget(button_);
@@ -23,7 +25,7 @@ TriggerGeminiPanel::TriggerGeminiPanel(QWidget * parent)
   setLayout(layout);
 
   connect(button_, SIGNAL(clicked()), this, SLOT(onButtonClick()));
-  connect(service_name_editor_, SIGNAL(editingFinished()), this, SLOT(updateService()));
+  connect(target_class_editor_, SIGNAL(editingFinished()), this, SLOT(updateTargetClass()));
 }
 
 TriggerGeminiPanel::~TriggerGeminiPanel()
@@ -33,48 +35,59 @@ TriggerGeminiPanel::~TriggerGeminiPanel()
 void TriggerGeminiPanel::onInitialize()
 {
   node_ = getDisplayContext()->getRosNodeAbstraction().lock()->get_raw_node();
-  updateService();
+  
+  // Publisher for target class
+  publisher_ = node_->create_publisher<std_msgs::msg::String>("/target_class", 10);
+  
+  // Client for trigger service (Hardcoded)
+  client_ = node_->create_client<std_srvs::srv::Trigger>("/trigger_gemini_pick");
 }
 
-void TriggerGeminiPanel::updateService()
+void TriggerGeminiPanel::updateTargetClass()
 {
-  QString new_service_name = service_name_editor_->text();
-  if (new_service_name != service_name_ || !client_) {
-    service_name_ = new_service_name;
-    if (node_) {
-      client_ = node_->create_client<std_srvs::srv::Trigger>(service_name_.toStdString());
-    }
-  }
+  target_class_str_ = target_class_editor_->text();
 }
 
 void TriggerGeminiPanel::onButtonClick()
 {
+  // 1. Publish the Target Class
+  if (publisher_) {
+    auto msg = std_msgs::msg::String();
+    msg.data = target_class_str_.toStdString();
+    publisher_->publish(msg);
+    RCLCPP_INFO(node_->get_logger(), "Published target class: %s", msg.data.c_str());
+  }
+
+  // 2. Wait 100ms
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  // 3. Call Service
   if (!client_) return;
 
   if (!client_->wait_for_service(std::chrono::seconds(1))) {
-    RCLCPP_WARN(node_->get_logger(), "Service %s not available", service_name_.toStdString().c_str());
+    RCLCPP_WARN(node_->get_logger(), "Service /trigger_gemini_pick not available");
     return;
   }
 
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
   auto future = client_->async_send_request(request);
-  RCLCPP_INFO(node_->get_logger(), "Sent request to %s", service_name_.toStdString().c_str());
+  RCLCPP_INFO(node_->get_logger(), "Sent request to /trigger_gemini_pick");
 }
 
 void TriggerGeminiPanel::load(const rviz_common::Config & config)
 {
   rviz_common::Panel::load(config);
   QString str;
-  if (config.mapGetString("Service", &str)) {
-    service_name_editor_->setText(str);
-    updateService();
+  if (config.mapGetString("TargetClass", &str)) {
+    target_class_editor_->setText(str);
+    updateTargetClass();
   }
 }
 
 void TriggerGeminiPanel::save(rviz_common::Config config) const
 {
   rviz_common::Panel::save(config);
-  config.mapSetValue("Service", service_name_);
+  config.mapSetValue("TargetClass", target_class_str_);
 }
 
 } // namespace qb_arm_rviz_plugins
