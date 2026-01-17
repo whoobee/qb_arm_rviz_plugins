@@ -43,10 +43,9 @@ protected Q_SLOTS:
   void updateNodeList();
   void onNodeSelected(int index);
   void onLevelFilterChanged(int state);
-
-protected:
   void refreshLogDisplay();
 
+protected:
   QPushButton* button_;
   QPushButton* return_button_;
   QLineEdit* target_class_editor_;
