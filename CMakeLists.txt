@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -29,6 +30,7 @@ target_link_libraries(qb_arm_rviz_plugins
 
 ament_target_dependencies(qb_arm_rviz_plugins
   rclcpp
+  rcl_interfaces
   rviz_common
   rviz_rendering
   std_srvs
@@ -39,7 +41,7 @@ ament_target_dependencies(qb_arm_rviz_plugins
 set_target_properties(qb_arm_rviz_plugins PROPERTIES AUTOMOC ON)
 
 ament_export_libraries(qb_arm_rviz_plugins)
-ament_export_dependencies(rclcpp rviz_common rviz_rendering std_srvs std_msgs)
+ament_export_dependencies(rclcpp rcl_interfaces rviz_common rviz_rendering std_srvs std_msgs)
 
 pluginlib_export_plugin_description_file(rviz_common plugin_description.xml)
 
